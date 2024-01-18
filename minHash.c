@@ -51,41 +51,53 @@ int main() {
         }
 
     closedir(dir);
+    
 
-    for(int i=0; i<fileCount; i++){   /*print di controllo*/
+    FILE *file;
+    char ***shingles = NULL;
+    char *doc = NULL;
+    int numFile = 0;
+
+    for(int i=0; i<fileCount; i++){
+
+        file = fopen(filePaths[i], "r");
         printf("%s\n", filePaths[i]);
-    }
-
-    const char *documento = "Ciao sono maura e forse sono ritardata perché non so programmare.";
-    int shingleSize = 3;
-     /*copio documento perché token modifica la stringa originale (non servirà con i documenti aperti in lettura)*/
-    char *copy = strdup(documento);
-    char *token = strtok(copy, " ");
-
-    printf("Procedo a creare shingles di lunghezza %d:\n", shingleSize);
-
-    int count = 0;
-    /*int lunghezza_token = strlen(token);*/
-    //printf("%d\n", lunghezza_token);
-    while (token != NULL) {
-        for (int i = 0; i < shingleSize; i++) {
-            int lunghezza_token = strlen(token + i);
-            printf("%d\n", lunghezza_token);
-            char *shingle = malloc((lunghezza_token +1)* sizeof(char));
-            strcat(shingle, token + i);
-            if (i < shingleSize - 1) {
-                strcat(shingle, " ");
-            }
-            token = strtok(NULL, " ");
-            printf("%d\t", shingle);
+        if (file == NULL) {
+            fprintf(stderr, "Impossibile aprire il file.\n");
+            return 1;
         }
 
-        // Stampa o gestione degli shingle
-        //free(shingle);
-        count++;
+        fseek(file, 0, SEEK_END);  // Sposta il cursore alla fine del file
+        size_t fileLength = ftell(file);  // Ottieni la posizione corrente del cursore (quindi la lunghezza del file)
+        rewind(file);  // Riporta il cursore all'inizio del file
+
+        doc = malloc(fileLength * sizeof(char));
+        if (doc == NULL) {
+            fprintf(stderr, "Errore durante l'allocazione di memoria per il documento.\n");
+            return 1;
+        }
+
+        size_t bytesRead = fread(doc, sizeof(char), fileLength, file);
+
+        shingles = realloc(shingles, (numFile + 1) * sizeof(char **));
+        shingles[numFile] = malloc((fileLength - MAX_SHINGLE_SIZE + 1)  * sizeof(char *));
+
+        char *token = strtok(doc, " ");
+        int index = 0;
+        while (token != NULL) {
+            shingles[numFile][index] = malloc((strlen(token) + 1) * sizeof(char));
+            strcpy(shingles[numFile][index], token);
+            index++;
+            token = strtok(NULL, " ");
+
+            printf("%d\t%d\n", numFile, index);
+        }
+
+        numFile++;
+        fclose(file);
     }
 
-    free(copy);
+
 
     return 0;
 }
