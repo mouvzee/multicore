@@ -5,12 +5,12 @@
 #include <unistd.h>
 #include <dirent.h>
 
-
+#define MAX_SHINGLE_SIZE 3 /*potrei modificarlo a mio piacimento*/
 
 
 int main() {
 
-    /* Ricavo il path dove sono contenuti i D documenti da confrontare */
+    /* Creo il path dove sono contenuti i D documenti da confrontare */
     char path[100];
 
     if (getcwd(path, sizeof(path)) == NULL) {
@@ -40,7 +40,7 @@ int main() {
         }
         char *fullPath = malloc(strlen(path) + strlen(entry->d_name) + 2); /* +2 perchè separiamo dir e stringa d_name */
         sprintf(fullPath, "%s/%s", path, entry->d_name); /*costruisco il percorso completo in fullpath*/
-        filePaths = realloc(filePaths, (fileCount + 1) * sizeof(char *));
+        filePaths = realloc(filePaths, (fileCount + 1) * sizeof(char *)); /*RICORDATI DI FARE LA FREE*/
         filePaths[fileCount] = fullPath;
         fileCount++;
 
@@ -52,10 +52,40 @@ int main() {
 
     closedir(dir);
 
-    for(int i=0; i<fileCount; i++){
+    for(int i=0; i<fileCount; i++){   /*print di controllo*/
         printf("%s\n", filePaths[i]);
     }
 
-    return 0;
- }
+    const char *documento = "Ciao sono maura e forse sono ritardata perché non so programmare.";
+    int shingleSize = 3;
+     /*copio documento perché token modifica la stringa originale (non servirà con i documenti aperti in lettura)*/
+    char *copy = strdup(documento);
+    char *token = strtok(copy, " ");
 
+    printf("Procedo a creare shingles di lunghezza %d:\n", shingleSize);
+
+    int count = 0;
+    /*int lunghezza_token = strlen(token);*/
+    //printf("%d\n", lunghezza_token);
+    while (token != NULL) {
+        for (int i = 0; i < shingleSize; i++) {
+            int lunghezza_token = strlen(token + i);
+            printf("%d\n", lunghezza_token);
+            char *shingle = malloc((lunghezza_token +1)* sizeof(char));
+            strcat(shingle, token + i);
+            if (i < shingleSize - 1) {
+                strcat(shingle, " ");
+            }
+            token = strtok(NULL, " ");
+            printf("%d\t", shingle);
+        }
+
+        // Stampa o gestione degli shingle
+        //free(shingle);
+        count++;
+    }
+
+    free(copy);
+
+    return 0;
+}
